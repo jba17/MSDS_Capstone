@@ -16,6 +16,7 @@ data/csv_dumps/Ripple/*
 !data/csv_dumps/ETH/.gitkeep
 !data/csv_daily/Ripple/.gitkeep
 !data/csv_dumps/Ripple/.gitkeep
+!data/coin_tweets
 
 .DS_Store
 .ipynb_checkpoints/
