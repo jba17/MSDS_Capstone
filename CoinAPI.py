@@ -25,24 +25,47 @@ class CoinAPI:
         self.request_limits = {'X-RateLimit-Limit': 100, 'X-RateLimit-Remaining': 100, 
                                'X-RateLimit-RequestCost' : 0, 'X-RateLimit-Reset' : None}
        
+    # External function that returns historical OHLCV information related to a specific cryptocurrency
+    # getHistOHLCV(symbol_id = string, period_id = string, time_start = string, time_end = string, limit = int)
+    # period_id defaulted to 1DAY, reference coinAPI documentation for full list of period_ids
+    # end_time optional, defaulted to None, request will pull tweets at start in chronological order until limit reached
+    # limit optional, defaulted to 100, each multiple of 100 counts as a request with the coinAPI interface
+    # times follow ISO 8601 time format (YYY-MM-DDThh:mm:ss)
+    def getHistOHLCV(self, symbol_id, time_start, period_id='1DAY', time_end=None, limit=100):
+        if time_end == None:
+            url = self._url_stem+'/ohlcv/'+symbol_id+'/history?period_id='+period_id+'&time_start='+time_start+'&limit='+str(limit)
+        else:
+            url = self._url_stem+'/ohlcv/'+symbol_id+'/history?period_id='+period_id+'&time_start='+time_start+'&time_end='+time_end+'&limit='+str(limit)           
+        response_object = requests.get(url, headers=self.headers)
+        
+        self._responseCheck(response_object)
+        self._updateRequestLimits(response_object)
+        # returning only the tweet objects within REST API response object
+        return json.loads(response_object.text)
+    
     # External function that loops through historical tweets function and returns list of tweets
     # loopHistTweets(time_start = string, loops = int, gap = int)
     # loops optional, defaulted to 24, number of iterations, default set to 100 tweets per hour for 24 hours
     # gap optional, defaulted to 60, minutes between time_start iterations
     # time_start follows ISO 8601 time format (YYYY-MM-DDThh:mm:ss)
     def loopHistTweets(self, time_start, loops=24, gap=60):
-        list_of_tweet_objects = {}
+        list_hist_tweet_objects = []
         
         for i in range(loops):
+            hist_tweet_object = {}
             # convert string to datetime, add gap time, convert back to string
             start_date = dateutil.parser.parse(time_start)
             start_date += dateutil.relativedelta.relativedelta(minutes=gap*i)
-            time_start = date.strftime('%Y-%m-%dT%H:%M:%S')
+            time_start = start_date.strftime('%Y-%m-%dT%H:%M:%S')
             
             tweet_objects = self.getHistTweets(time_start)
+            
             # add results to dictionary with key as its time_start value
-            list_of_tweet_objects[time_start] = tweet_objects
-        return list_of_tweet_objects
+            hist_tweet_object['time']= time_start
+            hist_tweet_object['tweets'] = tweet_objects
+            
+            list_hist_tweet_objects.append(hist_tweet_object)
+        return list_hist_tweet_objects
     
     # External function that returns historical tweets related to cryptocurrency markets
     # getHistTweets(time_start = string, time_end = string, limit = int)
@@ -52,23 +75,34 @@ class CoinAPI:
     def getHistTweets(self, time_start, time_end=None, limit=100):
         # create request string specific to coinAPI method and execute
         if time_end == None:
-            url = self._url_stem+'/twitter/history?time_start='+time_start+'&limit'+str(limit)
+            url = self._url_stem+'/twitter/history?time_start='+time_start+'&limit='+str(limit)
         else:
-            url = self._url_stem+'/twitter/history?time_start='+time_start+'&time_end'+time_end+'&limit'+str(limit)
-        tweet_objects = requests.get(url, headers=self.headers)
+            url = self._url_stem+'/twitter/history?time_start='+time_start+'&time_end='+time_end+'&limit='+str(limit)
+        response_object = requests.get(url, headers=self.headers)
         
-        self._responseCheck(tweet_objects)
-        self._updateRequestLimits(tweet_objects)
-        return tweet_objects
+        self._responseCheck(response_object)
+        self._updateRequestLimits(response_object)
+        # returning only the tweet objects within REST API response object
+        return json.loads(response_object.text)
     
     # External function that saves tweet text in a csv format
-    # saveTweetsText(list_of_tweet_objects = dict of twitter objects, outfile_name = string)
-    def saveTweetsText(self, list_of_tweet_objects, outfile_name):
+    # saveTweetsText(list_hist_tweet_objects = list of historical twitter objects, outfile_name = string, looped = bool)
+    # looped optional, defaulted to true, determines if list_hist_tweet_object is a list of coinAPI requests from 
+    # loopHistTweets function or single list of tweet objects from getHistTweets function
+    def saveTweetsText(self, list_hist_tweet_objects, outfile_name, looped=True):
         outfile_path = 'data/coin_tweets/'+outfile_name
+        
         with open(outfile_path, 'w') as outfile:
-            for tweet in list_of_tweet_objects:
-                text = self._translate(tweet)
-                outfile.write("".join(text.splitlines()))
+            if looped:
+                for hist_tweet_object in range(len(list_hist_tweet_objects)):
+                    for tweet in range(len(list_hist_tweet_objects[hist_tweet_object]['tweets'])):
+                        text = self._translate(list_hist_tweet_objects[hist_tweet_object]['tweets'][tweet]).encode('utf-8')
+                        outfile.write("".join(text.splitlines())+'\n')
+            else:
+                for tweet in range(len(list_hist_tweet_objects)):
+                    text = self._translate(list_hist_tweet_objects[tweet]).encode('utf-8')
+                    outfile.write("".join(text.splitlines()))
+            
             outfile.close()
     
     # External function that saves tweet objects in a json format 
@@ -92,11 +126,19 @@ class CoinAPI:
     def _translate(self, tweet_object):
         try:
             lang = tweet_object['user']['lang'][:2]
-            text = self.translator.translate(tweet_object['text'], src=lang, dest='en').text
+            if lang != 'en':
+                text = self.translator.translate(tweet_object['text'], src=lang, dest='en').text
+            else:
+                text = tweet_object['text']
+        # exception handling for when 2 letter language code not recognized or no text value in twitter object
         except:
-            print "unable to translate: ",tweet_object['text']
-            text = tweet_object['text']
-            continue
+            if 'text' in tweet_object.keys():
+                print "unable to translate: ",tweet_object['text']
+                text = tweet_object['text']
+            else:
+                print "no text in tweet object"
+                text = ''
+            pass
         return text
     
     # Internal function that checks to ensure http request received a successful response (200)
@@ -115,5 +157,5 @@ class CoinAPI:
     def _updateRequestLimits(self, response_object):
         self.request_limits = {'X-RateLimit-Limit': response_object.headers['X-RateLimit-Limit'], 
                                'X-RateLimit-Remaining': response_object.headers['X-RateLimit-Remaining'], 
-                               'X-RateLimit-RequestCost' : response_object.headers['X-RateLimit-RequestCost'], 
+                               'X-RateLimit-Request-Cost' : response_object.headers['X-RateLimit-Request-Cost'], 
                                'X-RateLimit-Reset' : response_object.headers['X-RateLimit-Reset']}
