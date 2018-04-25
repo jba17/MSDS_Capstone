@@ -1,6 +1,7 @@
 import dateutil
 import json
 import requests
+from googletrans import Translator
 
 class UnsuccessfulRequest(Exception):
         def __init__(self, status_code):
@@ -10,6 +11,8 @@ class UnsuccessfulRequest(Exception):
             
             self.status_code = status_code
             self.status_response = responses.get(int(status_code))
+            
+            self.translator = Translator()
 
 class CoinAPI:
     def __init__(self, key):
@@ -58,6 +61,16 @@ class CoinAPI:
         self._updateRequestLimits(tweet_objects)
         return tweet_objects
     
+    # External function that saves tweet text in a csv format
+    # saveTweetsText(list_of_tweet_objects = dict of twitter objects, outfile_name = string)
+    def saveTweetsText(self, list_of_tweet_objects, outfile_name):
+        outfile_path = 'data/coin_tweets/'+outfile_name
+        with open(outfile_path, 'w') as outfile:
+            for tweet in list_of_tweet_objects:
+                text = self._translate(tweet)
+                outfile.write("".join(text.splitlines()))
+            outfile.close()
+    
     # External function that saves tweet objects in a json format 
     # saveTweets(list_of_tweet_objects = dict of twitter objects, outfile_name = string)
     def saveTweets(self, list_of_tweet_objects, outfile_name):
@@ -73,6 +86,18 @@ class CoinAPI:
             data = json.load(json_file)
             json_file.close()
         return data
+        
+    # Internal function that translate tweet into english using googletrans and language noted by twitter user
+    # _translate(tweet_object = twitter object)
+    def _translate(self, tweet_object):
+        try:
+            lang = tweet_object['user']['lang'][:2]
+            text = self.translator.translate(tweet_object['text'], src=lang, dest='en').text
+        except:
+            print "unable to translate: ",tweet_object['text']
+            text = tweet_object['text']
+            continue
+        return text
     
     # Internal function that checks to ensure http request received a successful response (200)
     # _responseCheck(response_object = coinAPI response object)
