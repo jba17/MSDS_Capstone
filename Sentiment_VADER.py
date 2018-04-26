@@ -2,15 +2,22 @@ import pandas as pd
 import preprocessor as p
 from nltk.tokenize import TweetTokenizer
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import json
+import csv
+import os
+import re
 
 class DailySentiment:
-    def __init__(self):
+    def __init__(self, crypto, folder):
         # instantiate tweet tokenizer from nltk.tokenize, set to remove handles and reduce repeating characters
         self._tweetProcessor = TweetTokenizer(strip_handles=False, reduce_len=True)
         # instantiate sentiment intensity analyzer from nltk.sentiment.vader
         self._vaderAnalyzer = SentimentIntensityAnalyzer()
+        
+        self.crypto = crypto
+        self.folder = folder
     
-    # ---- OBSOLETE FUNCTION BELOW ----
+    # ---- OBSOLETE FUNCTION BELOW ---- UNSUPPORTED: DO NOT USE
     # External function to return average VADER polarity score
     # getDailySentiment(df = dataframe, keyword = string, filterTweets = boolean, noninfluence = boolean)
     # keyword: search term tweets were queried with
@@ -23,14 +30,29 @@ class DailySentiment:
                       'pos': sum(score['pos'] for score in scores) / len(scores),
                       'compound': sum(score['compound'] for score in scores) / len(scores)}
         return avg_scores
-    # ---- OBSOLETE FUNCTION ABOVE ----
+    # ---- OBSOLETE FUNCTION ABOVE ---- UNSUPPORTED: DO NOT USE
+    
+    # External function to write csv files of VADER sentiment scores across tweet files in object given folder
+    def compileSentiments(self):
+        # get list of daily tweet files in folder 
+        files = self._getRawFiles()
+        # loop through each folder and save csv
+        for filename in files:
+            df = self._openTweets(filename)
+            
+            if self.folder == 'csv_daily':
+                scores = self.getSentimentScores(df, keyword=self.crypto)
+            else:
+                scores = self.getSentimentScores(df, keyword=self.crypto, noninfluence=False)
+            self._writeSentiment(filename, scores)
+            
     
     # External function to return a list of VADER polarity scores
     # getSentimentScores(df = dataframe, keyword = string, filterTweets = boolean, noninfluence = boolean)
     # keyword: search term tweets were queried with
     # filterTweets and noninfluence: booleans to run/skip particular preprocessing function
     def getSentimentScores(self, df, keyword=None, filterTweets=True, noninfluence=True):
-        if (filterTweets or keyword != None):
+        if (filterTweets and keyword != None):
             df = self._filterTweets(df, keyword)
         if noninfluence:
             df = self._removeNoninfluencers(df)
@@ -45,7 +67,10 @@ class DailySentiment:
     # Internal function to remove tweets without keyword (BUG FIX)
     # _filterTweets(df = dataframe, keyword = string)
     def _filterTweets(self, df, keyword):
-        df_filtered = df[df.text.str.contains(keyword)]
+        if keyword == 'Bitcoin':
+            df_filtered = df[(df.text.str.contains(keyword, case=False))]
+        else:
+            df_filtered = df[df.text.str.contains(keyword, case=False)]
         return df_filtered
         
     # Internal function to remove tweets from users below a follower threshold
@@ -64,40 +89,49 @@ class DailySentiment:
 
         return tweet 
     
-    # Internal function that opens .txt containing tweets in coin_tweets folder
-    # _openRawCoinAPITweets(filename = string)    
-    def _openRawCoinAPITweets(self, filename):
-        path = "data/coin_tweets/"+filename
-        df = pd.read_csv(path, lineterminator='\n', header=None, names=['text'])        
+    # Internal function that opens .txt containing tweets in object given folder
+    # _openTweets(filename = string)    
+    def _openTweets(self, filename):
+        # construct folder path where files reside
+        if self.folder == 'csv_daily':
+            path = 'data/' + self.folder + '/' + self.crypto + '/' + filename
+            df = pd.read_csv(path, lineterminator='\n')
+        else:
+            path = 'data/' + self.folder + '/' + '/' + filename
+            lines = open(path,'r').read().split('\n')
+            df = pd.DataFrame(data={'text':lines})      
+                
         return df
-    
-    # Internal function that opens .txt containing tweets in csv_daily folder
-    # _openRawTweets(filename = string)
-    def _openRawTweets(self, filename):
-        path = "data/csv_daily/" + self.crypto + "/" +filename
-        df = pd.read_csv(path, lineterminator='\n')        
-        return df
+        
+    # Internal function that writes .txt containing VADER sentiment results for each tweet
+    # _writeSentiment(filename = string)
+    def _writeSentiment(self, filename, scores):
+        # construct folder path where files to be written
+        path = 'data/VADER/' + self.folder + '/' + self.crypto + '/' + filename
+        
+        with open(path, 'w') as outfile:
+            rowWriter = csv.writer(outfile)       
+            # write header
+            rowWriter.writerow(['compound', 'neg', 'neu', 'pos'])
+        
+            for score in scores:
+                rowWriter.writerow([score['compound'], score['neg'], score['neu'], score['pos']])
         
     # Internal function extracting list of csv files in folder
     # _getRawFiles(folder = string)
-    def _getRawFiles(self, folder):
+    def _getRawFiles(self):
         # construct folder path where files reside
-        if folder == 'csv_daily'
-            folder_name = "/data/csv_daily/"
-            path = str(os.getcwd()) + folder_name + self.crypto
+        if self.folder == 'csv_daily':
+            path = str(os.getcwd()) + '/data/' + self.folder + '/' + self.crypto
         else:
-            path = "/data/coin_tweets"
+            path = str(os.getcwd()) + '/data/' + self.folder
                     
         # using regex expression to only take file_names (instead of full paths)
         reg = re.compile("\d{8}")
             
         # loop to generate list of all files in folder that fit naming convention
-        _files = []
+        files = []
         for csv_path in os.listdir(path):
             if reg.search(csv_path):
-                 _files.append(csv_path)
-        return _files
-        
-    def _writeRawSentiment(self, filename):
-        path = 'data/VADER/raw_tweets/'+self.crypto+'/'+filename
-        
+                 files.append(csv_path)
+        return files
