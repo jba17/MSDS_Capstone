@@ -10,6 +10,7 @@ class DailySentiment:
         # instantiate sentiment intensity analyzer from nltk.sentiment.vader
         self._vaderAnalyzer = SentimentIntensityAnalyzer()
     
+    # ---- OBSOLETE FUNCTION BELOW ----
     # External function to return average VADER polarity score
     # getDailySentiment(df = dataframe, keyword = string, filterTweets = boolean, noninfluence = boolean)
     # keyword: search term tweets were queried with
@@ -22,6 +23,7 @@ class DailySentiment:
                       'pos': sum(score['pos'] for score in scores) / len(scores),
                       'compound': sum(score['compound'] for score in scores) / len(scores)}
         return avg_scores
+    # ---- OBSOLETE FUNCTION ABOVE ----
     
     # External function to return a list of VADER polarity scores
     # getSentimentScores(df = dataframe, keyword = string, filterTweets = boolean, noninfluence = boolean)
@@ -61,3 +63,41 @@ class DailySentiment:
         tweet = p.clean(tweet.translate(None, "#"))
 
         return tweet 
+    
+    # Internal function that opens .txt containing tweets in coin_tweets folder
+    # _openRawCoinAPITweets(filename = string)    
+    def _openRawCoinAPITweets(self, filename):
+        path = "data/coin_tweets/"+filename
+        df = pd.read_csv(path, lineterminator='\n', header=None, names=['text'])        
+        return df
+    
+    # Internal function that opens .txt containing tweets in csv_daily folder
+    # _openRawTweets(filename = string)
+    def _openRawTweets(self, filename):
+        path = "data/csv_daily/" + self.crypto + "/" +filename
+        df = pd.read_csv(path, lineterminator='\n')        
+        return df
+        
+    # Internal function extracting list of csv files in folder
+    # _getRawFiles(folder = string)
+    def _getRawFiles(self, folder):
+        # construct folder path where files reside
+        if folder == 'csv_daily'
+            folder_name = "/data/csv_daily/"
+            path = str(os.getcwd()) + folder_name + self.crypto
+        else:
+            path = "/data/coin_tweets"
+                    
+        # using regex expression to only take file_names (instead of full paths)
+        reg = re.compile("\d{8}")
+            
+        # loop to generate list of all files in folder that fit naming convention
+        _files = []
+        for csv_path in os.listdir(path):
+            if reg.search(csv_path):
+                 _files.append(csv_path)
+        return _files
+        
+    def _writeRawSentiment(self, filename):
+        path = 'data/VADER/raw_tweets/'+self.crypto+'/'+filename
+        
