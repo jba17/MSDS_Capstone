@@ -8,6 +8,7 @@ data/csv_daily/ETH/*
 data/csv_dumps/ETH/*
 data/csv_daily/Ripple/*
 data/csv_dumps/Ripple/*
+data/coin_tweets/*
 
 # unignore .gitkeeps to keep folder structure
 !data/csv_daily/Bitcoin/.gitkeep
@@ -16,7 +17,7 @@ data/csv_dumps/Ripple/*
 !data/csv_dumps/ETH/.gitkeep
 !data/csv_daily/Ripple/.gitkeep
 !data/csv_dumps/Ripple/.gitkeep
-!data/coin_tweets
+!data/coin_tweets/.gitkeep
 
 .DS_Store
 .ipynb_checkpoints/
