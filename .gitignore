@@ -9,6 +9,10 @@ data/csv_dumps/ETH/*
 data/csv_daily/Ripple/*
 data/csv_dumps/Ripple/*
 data/coin_tweets/*
+data/VADER/rawTweets/Bitcoin/*
+data/VADER/rawTweets/ETH/*
+data/VADER/rawCoinAPITweets/Bitcoin/*
+data/VADER/rawCoinAPITweets/ETH/*
 
 # unignore .gitkeeps to keep folder structure
 !data/csv_daily/Bitcoin/.gitkeep
@@ -18,6 +22,10 @@ data/coin_tweets/*
 !data/csv_daily/Ripple/.gitkeep
 !data/csv_dumps/Ripple/.gitkeep
 !data/coin_tweets/.gitkeep
+!data/VADER/rawTweets/Bitcoin/.gitkeep
+!data/VADER/rawTweets/ETH/.gitkeep
+!data/VADER/rawCoinAPITweets/Bitcoin/.gitkeep
+!data/VADER/rawCoinAPITweets/ETH/.gitkeep
 
 .DS_Store
 .ipynb_checkpoints/
