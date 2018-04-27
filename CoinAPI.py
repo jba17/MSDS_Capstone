@@ -47,6 +47,22 @@ class CoinAPI:
         self._updateRequestLimits(response_object)
         # returning only the tweet objects within REST API response object
         return json.loads(response_object.text)
+        
+    # ---- FUNCTION IN DEVELOPMENT BELOW ---- MODEL AFTER _writeSentiments() in Sentiment_VADER.py
+    # Internal function that writes .txt containing VADER sentiment results for each tweet
+    # _writeSentiment(filename = string)
+    #def _writeHistOHLCV(self, filename, prices):
+        # construct folder path where files to be written
+    #    path = 'data//' + self.folder + '/' + self.crypto + '/' + filename
+        
+    #    with open(path, 'w') as outfile:
+    #        rowWriter = csv.writer(outfile)       
+            # write header
+    #        rowWriter.writerow(['compound', 'neg', 'neu', 'pos'])
+        
+    #        for score in scores:
+    #            rowWriter.writerow([score['compound'], score['neg'], score['neu'], score['pos']])
+    # ---- FUNCTION IN DEVELOPMENT ABOVE ---- MODEL AFTER _writeSentiments() in Sentiment_VADER.py
     
     # External function that loops through historical tweets function and returns list of tweets
     # loopHistTweets(time_start = string, loops = int, gap = int)
