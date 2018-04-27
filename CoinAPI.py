@@ -1,8 +1,13 @@
+# Purpose of program is to use coinAPI to pull information about certain cryptocurrencies
+# using the REST portion of coinAPI.io.  Various functions within the class can also
+# open and save coinAPI.io response objects for later use.  Files are saved in a 
+# predetermined folder structure as mapped out in www.github.com/JackNelson/Capstone 
 import dateutil
 import json
 import requests
 from googletrans import Translator
 
+# Custom exception handling for non-successful http requests to coinAPI.io (status_code != 200)
 class UnsuccessfulRequest(Exception):
         def __init__(self, status_code):
             responses = {400 : "Bad Request - Undetermined error", 401 : "Unauthorized - Incorrect API key", 
