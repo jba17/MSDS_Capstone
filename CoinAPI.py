@@ -60,7 +60,7 @@ class CoinAPI:
             rowWriter.writerow(['time_close', 'trades_count', 'volume_traded', 'time_period_start', 'time_period_end', 
                                 'price_close', 'price_high', 'time_open', 'price_open', 'price_low'])
         
-            for price in pricess:
+            for price in prices:
                 rowWriter.writerow([price['time_close'], price['trades_count'], price['volume_traded'], price['time_period_start'], 
                                     price['time_period_end'], price['price_close'], price['price_high'], price['time_open'], 
                                     price['price_open'], price['price_low']])
