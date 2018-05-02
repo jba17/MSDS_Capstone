@@ -48,21 +48,23 @@ class CoinAPI:
         # returning only the tweet objects within REST API response object
         return json.loads(response_object.text)
         
-    # ---- FUNCTION IN DEVELOPMENT BELOW ---- MODEL AFTER _writeSentiments() in Sentiment_VADER.py
     # Internal function that writes .txt containing VADER sentiment results for each tweet
     # _writeSentiment(filename = string)
-    #def _writeHistOHLCV(self, filename, prices):
+    def _writeHistOHLCV(self, filename, prices):
         # construct folder path where files to be written
-    #    path = 'data//' + self.folder + '/' + self.crypto + '/' + filename
+        path = 'data/price_data/' + filename
         
-    #    with open(path, 'w') as outfile:
-    #        rowWriter = csv.writer(outfile)       
+        with open(path, 'w') as outfile:
+            rowWriter = csv.writer(outfile)       
             # write header
-    #        rowWriter.writerow(['compound', 'neg', 'neu', 'pos'])
+            rowWriter.writerow(['time_close', 'trades_count', 'volume_traded', 'time_period_start', 'time_period_end', 
+                                'price_close', 'price_high', 'time_open', 'price_open', 'price_low'])
         
-    #        for score in scores:
-    #            rowWriter.writerow([score['compound'], score['neg'], score['neu'], score['pos']])
-    # ---- FUNCTION IN DEVELOPMENT ABOVE ---- MODEL AFTER _writeSentiments() in Sentiment_VADER.py
+            for price in pricess:
+                rowWriter.writerow([price['time_close'], price['trades_count'], price['volume_traded'], price['time_period_start'], 
+                                    price['time_period_end'], price['price_close'], price['price_high'], price['time_open'], 
+                                    price['price_open'], price['price_low']])
+            outfile.close()
     
     # External function that loops through historical tweets function and returns list of tweets
     # loopHistTweets(time_start = string, loops = int, gap = int)

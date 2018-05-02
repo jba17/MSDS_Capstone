@@ -116,6 +116,7 @@ class DailySentiment:
         
             for score in scores:
                 rowWriter.writerow([score['compound'], score['neg'], score['neu'], score['pos']])
+            outfile.close()
         
     # Internal function extracting list of csv files in folder
     # _getRawFiles(folder = string)
