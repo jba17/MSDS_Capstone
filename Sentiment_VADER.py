@@ -84,8 +84,8 @@ class DailySentiment:
     def _cleanTweet(self, tweet):
         # set preprocessor to remove links, mentions, and reserved words (FAV, RT, etc.)
         p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.RESERVED)
-        # clean tweet with preprocessor and remove hashtags
-        tweet = p.clean(tweet.translate(None, "#"))
+        # clean tweet with preprocessor and remove unwanted symbols (hashtags, quotes, question marks)
+        tweet = p.clean(tweet.translate(None, '#?"'))
 
         return tweet 
     
