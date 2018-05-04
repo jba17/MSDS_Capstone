@@ -136,7 +136,8 @@ class CoinAPI:
             json.dump(list_of_tweet_objects, outfile)
             outfile.close()
     
-    # External function that opens .txt file in json format and saves as json object (reverse of saveTweets)
+    # External function that opens .
+    file in json format and saves as json object (reverse of saveTweets)
     # openSavedTweets(infile_path = string) <--data/coin_tweets/file_name if used saveTweets function
     def openSavedTweets(self, infile_path):
         with open(infile_path) as json_file:

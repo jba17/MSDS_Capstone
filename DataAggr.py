@@ -12,21 +12,21 @@ from datetime import datetime
 # fetchSentiments(folder = string, crypto = string)
 # folder and crypto: levels of detail in predetermined folder structure used to path to pull files
 def fetchSentiments(folder, crypto):
-    reg = re.search('\d{8}')
-    path = 'data/VADER/' + folder + '/' + crypto
+    reg = re.compile('\d{8}')
+    path = 'data/VADER/' + folder + '/' + crypto + '/'
     #create list of .txt files in folder path that match regular expression
     files = [reg.search(filename).group(0) for filename in os.listdir(path) if reg.search(filename)]
     
     #initialize and append dataframes made from each .txt file
     for filename in files:
-        df_exists = 'df' in locals() or 'df' in globals()
-            if not df_exists:
-                df = pd.read_csv(path+filename+'.txt')
-                df['date'] = datetime.strptime(filename, '%Y%m%d')
-            else:
-                temp = pd.read_csv(path+filename+'.txt')
-                temp['date'] = datetime.strptime(filename, '%Y%m%d')
-                df = pd.concat([df, temp])                
+        df_exists = 'df' in locals()
+        if not df_exists:
+            df = pd.read_csv(path+filename+'.csv')
+            df['date'] = datetime.strptime(filename, '%Y%m%d')
+        else:
+            temp = pd.read_csv(path+filename+'.csv')
+            temp['date'] = datetime.strptime(filename, '%Y%m%d')
+            df = pd.concat([df, temp])                
     return df
 
 # External function to return a dataframe of the highest VADER polarity score between pos/neg in VADER score df
@@ -51,7 +51,7 @@ def getPolarity(df):
 def getPriceDiff(df):
     data = {'date':[], 'price_diff':[]}
     for index, row in df.iterrows():
-        data['date'].append(datetime.strptime(row['date'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+        data['date'].append(datetime.strptime(row['time_period_start'], '%Y-%m-%dT%H:%M:%S.%f0Z'))
         data['price_diff'].append(row['price_close'] - row['price_open'])
     df_price_diff = pd.DataFrame.from_dict(data)
     
