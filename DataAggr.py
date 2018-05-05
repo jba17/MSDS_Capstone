@@ -17,14 +17,20 @@ def fetchSentiments(folder, crypto):
     #create list of .txt files in folder path that match regular expression
     files = [reg.search(filename).group(0) for filename in os.listdir(path) if reg.search(filename)]
     
+    #determine correct file format suffix based on folder
+    if folder == 'coin_tweets':
+        suffix = '.txt'
+    else:
+        suffix = '.csv'
+    
     #initialize and append dataframes made from each .txt file
     for filename in files:
         df_exists = 'df' in locals()
         if not df_exists:
-            df = pd.read_csv(path+filename+'.csv')
+            df = pd.read_csv(path+filename+suffix)
             df['date'] = datetime.strptime(filename, '%Y%m%d')
         else:
-            temp = pd.read_csv(path+filename+'.csv')
+            temp = pd.read_csv(path+filename+suffix)
             temp['date'] = datetime.strptime(filename, '%Y%m%d')
             df = pd.concat([df, temp])                
     return df
