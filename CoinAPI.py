@@ -28,7 +28,7 @@ class CoinAPI:
         
         # initializing request limits for specific API Key - defaults to Free API Key Limits 
         self.request_limits = {'X-RateLimit-Limit': 100, 'X-RateLimit-Remaining': 100, 
-                               'X-RateLimit-RequestCost' : 0, 'X-RateLimit-Reset' : None}
+                               'X-RateLimit-Request-Cost' : 0, 'X-RateLimit-Reset' : None}
        
     # External function that returns historical OHLCV information related to a specific cryptocurrency
     # getHistOHLCV(symbol_id = string, period_id = string, time_start = string, time_end = string, limit = int)
@@ -136,8 +136,7 @@ class CoinAPI:
             json.dump(list_of_tweet_objects, outfile)
             outfile.close()
     
-    # External function that opens .
-    file in json format and saves as json object (reverse of saveTweets)
+    # External function that opens file in json format and saves as json object (reverse of saveTweets)
     # openSavedTweets(infile_path = string) <--data/coin_tweets/file_name if used saveTweets function
     def openSavedTweets(self, infile_path):
         with open(infile_path) as json_file:

@@ -3,8 +3,61 @@ import matplotlib.lines as mlines
 import numpy as np
 import seaborn as sns
 import matplotlib.patches
+import scipy.stats as stats
 from datetime import datetime
 plt.style.use('ggplot')
+
+def objectivePercent(df, ax=None, title=None):
+    #assigning ax variable if not given for plotting
+    if ax is None:
+        ax = plt.gca()
+        
+    #calculate percentages of scores with/without objectivity (neutral value =/!= 1)
+    objective = pd.crosstab(df['date'].astype(str), df['neu'] == 1)
+    objective_rate = objective.div(objective.sum(1).astype(float), axis=0)
+    
+    #plot objective_rate percentages in a stacked bar graph
+    objective_rate.plot(kind='barh', ax=ax, stacked=True, color=['blue','gray'])
+    
+    #objective bar plot formatting
+    ax.legend(['Objective', 'Neutral'], loc=1)
+    ax.set_xlabel('Percentage', color='k')
+    ax.set_ylabel('Date', color='k')
+    ax.tick_params('both', colors='k')
+    ax.set_title(title)
+    ax.invert_yaxis()
+    plt.tight_layout()
+    
+def objectiveDistribution(df_obj, df_polar, ax=None, title=None):   
+    #assigning ax variable if not given for plotting
+    if ax is None:
+        ax = plt.gca()
+        
+    #generate distribution plot for each set of values following a beta distribution
+    sns.distplot(df_polar['value'].abs(), ax=ax, fit_kws={'color':'blue'}, fit=stats.beta, hist=None, kde=False)
+    sns.distplot(df_obj['neu'], ax=ax, fit_kws={'color':'gray'}, fit=stats.beta, hist=None, kde=False)
+    
+    #get plotted lines for shading
+    l1 = ax.lines[0]
+    l2 = ax.lines[1]
+
+    #get xy coordinate data from each plotted line for shading
+    x1 = l1.get_xydata()[:,0]
+    y1 = l1.get_xydata()[:,1]
+    x2 = l2.get_xydata()[:,0]
+    y2 = l2.get_xydata()[:,1]
+    
+    #shade between the two sets of xy coordinate data from each plotted line
+    ax.fill_between(x1,y1, color="blue", alpha=0.3)
+    ax.fill_between(x2,y2, color="gray", alpha=0.3)
+
+    #objective distribution plot formatting
+    ax.legend(['Objective', 'Neutral'], loc=1)
+    ax.set_xlabel('Percentage', color='k')
+    ax.tick_params('both', colors='k')
+    ax.yaxis.set_visible(False)
+    ax.set_title(title)
+    plt.tight_layout()    
 
 def dailyPriceSentimentChart(df, file_suffix):
     #initialize figure with title
