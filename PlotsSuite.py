@@ -7,7 +7,7 @@ import scipy.stats as stats
 from datetime import datetime
 plt.style.use('ggplot')
 
-def objectivePercent(df, ax=None, title=None):
+def objectivePercent(df, ax=None, title=''):
     #assigning ax variable if not given for plotting
     if ax is None:
         ax = plt.gca()
@@ -28,7 +28,7 @@ def objectivePercent(df, ax=None, title=None):
     ax.invert_yaxis()
     plt.tight_layout()
     
-def objectiveDistribution(df_obj, df_polar, ax=None, title=None):   
+def objectiveDistribution(df_obj, df_polar, ax=None, title=''):   
     #assigning ax variable if not given for plotting
     if ax is None:
         ax = plt.gca()
@@ -59,66 +59,66 @@ def objectiveDistribution(df_obj, df_polar, ax=None, title=None):
     ax.set_title(title)
     plt.tight_layout()    
 
-def dailyPriceSentimentChart(df, file_suffix):
-    #initialize figure with title
-    fig, ax1 = plt.subplots()
-    plt.title(file_suffix)
+def dailyPriceSentimentChart(df, ax=None, ax_dual=None, title=''):
+    #assigning ax variable if not given for plotting
+    if ax is None:
+        ax = plt.gca()
     
     #plot price_diff series against date
-    ax1.plot(df.date, df.price_diff, 'b.:', markersize=20, markerfacecolor="None")
+    ax.plot(df.date, df.price_diff, 'b.:', markersize=20, markerfacecolor="None")
 
     #determine maximum distance away from zero as factor of 100 (for y axis labels)
-    max_diff = np.ceil(max(np.abs(ax1.get_ybound()))/100)*100
+    max_diff = np.ceil(max(np.abs(ax.get_ybound()))/100)*100
     
     #get the properly spaced xlabels determined by seaborn
-    xlabels = ax1.get_xticklabels()
+    xlabels = ax.get_xticklabels()
 
     #price_diff series plot formatting
-    ax1.set_xlabel('Date', color = 'k')
-    ax1.tick_params('x',labelrotation=-45)
-    ax1.set_xticklabels(xlabels, ha="left")
-    ax1.tick_params('x', colors='k')
-    ax1.set_ylabel('Price Change (USD)', color='b')
-    ax1.tick_params('y', colors='b')
-    ax1.yaxis.set_ticks(np.linspace(-max_diff,max_diff,5))
+    ax.set_title(title, color='k')
+    ax.set_xlabel('Date', color = 'k')
+    ax.tick_params('x',labelrotation=-45)
+    ax.set_xticklabels(xlabels, ha="left")
+    ax.tick_params('x', colors='k')
+    ax.set_ylabel('Price Change (USD)', color='b')
+    ax.tick_params('y', colors='b')
+    ax.yaxis.set_ticks(np.linspace(-max_diff,max_diff,5))
 
     #new plot with matching x axis as price_diff
-    ax2 = ax1.twinx()
+    ax_dual = ax.twinx()
 
     #plot horizontal line to show +/- boundary
     horiz_line = np.array([0 for i in range(len(df.date))])
-    ax2.plot(df.date,horiz_line, 'k')
+    ax_dual.plot(df.date,horiz_line, 'k')
 
     #plot daily_sentiment series against date
-    ax2.plot(df.date, df.value, 'ms:', markersize=10, markerfacecolor="None")
+    ax_dual.plot(df.date, df.value, 'ms:', markersize=10, markerfacecolor="None")
 
     #determine maximum distance away from zero as factor of 10 (for y axis labels)
-    max_pol = np.ceil(max(np.abs(ax2.get_ybound()))*10)/10
+    max_pol = np.ceil(max(np.abs(ax_dual.get_ybound()))*10)/10
 
     #daily_sentiment series plot formatting
-    ax2.set_ylabel('Average Polarity', color='m')
-    ax2.tick_params('y', colors='m')
-    ax2.yaxis.set_ticks(np.linspace(-max_pol,max_pol,5))
+    ax_dual.set_ylabel('Average Polarity', color='m')
+    ax_dual.tick_params('y', colors='m')
+    ax_dual.yaxis.set_ticks(np.linspace(-max_pol,max_pol,5))
 
     #custom legend for both plots
     blue_circle = mlines.Line2D([],[], color='b', marker='.', markersize=10, markerfacecolor="None", label='Price', linestyle=":")
     pink_square = mlines.Line2D([],[], color='m', marker='s', markersize=5, markerfacecolor="None", label='Polarity', linestyle=":")
     plt.legend(handles=[blue_circle,pink_square], loc = "lower right")
-
-    #saving and showing plots
-    path = 'figures/PriceSentimentChart_' + file_suffix + '.png'
-    plt.savefig(path, bbox_inches='tight')
-    plt.show()
+    
+    #plot formatting to prevent subplot overlap
+    plt.tight_layout()
     
     
 
-def dailySentimentsOverview(df, file_suffix):
-
+def dailySentimentsOverview(df, ax1=None, ax2=None, title=''):
+    #assigning ax variable if not given for plotting
+    if ax1 is None:
+        #create figure with subplots that share a x axis and properly sized to one another
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(8,6), gridspec_kw={'height_ratios':[3,1]}) 
+    
     #converting all negative polarity values to positive numbers for plotting
     df.value = abs(df.value)
-
-    #create figure with subplots that share a x axis and properly sized to one another
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(8,6), gridspec_kw={'height_ratios':[3,1]})
 
     #custom colors for +/- values
     colors = ['green', 'red']
@@ -127,11 +127,12 @@ def dailySentimentsOverview(df, file_suffix):
     sns.boxplot(data=df, x='date', y='value', palette=colors, hue='variable', ax=ax1)
     
     #polarity boxplot formatting
-    ax1.set_title(file_suffix)
+    ax1.set_title(title)
     ax1.set_ylabel('Polarity', color = 'k')
     ax1.tick_params('y', colors='k')
     ax1.xaxis.set_visible(False)
     ax1.legend_.set_title(None)
+    ax1.legend(loc=1)
 
     #looping through all boxplot chart elements to remove color inside boxplot boxes and change all
     #line and marker elements to proper color according to +/- polarity group
@@ -173,8 +174,3 @@ def dailySentimentsOverview(df, file_suffix):
 
     #tighten subplot spacing
     plt.subplots_adjust(hspace=.03)
-    
-    #saving and showing plots
-    path = 'figures/SentimentsOverviewChart_' + file_suffix + '.png'
-    plt.savefig(path, bbox_inches='tight')
-    plt.show()
